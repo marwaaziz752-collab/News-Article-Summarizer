@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summarization Results - News Article Summarizer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-dark bg-dark sticky-top">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-newspaper"></i> News Article Summarizer
+            </span>
+            <a href="/" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-house"></i> Home
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container-fluid my-5">
+        <!-- Article Info Section -->
+        <div id="articleInfo" class="row mb-4">
+            <div class="col-lg-12">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0" id="articleTitle">
+                            <i class="bi bi-file-text"></i> Article Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-lg-4 mb-3" id="articleImageContainer">
+                                <div class="image-card shadow-sm rounded overflow-hidden">
+                                    <img id="articleImage" src="" alt="Article Top Image" class="img-fluid w-100 h-100 object-fit-cover">
+                                </div>
+                            </div>
+                            <div class="col-lg-8 mb-3">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <p class="mb-1"><strong>Author:</strong></p>
+                                        <p id="articleAuthor" class="text-muted"></p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <p class="mb-1"><strong>Published:</strong></p>
+                                        <p id="publishDate" class="text-muted"></p>
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <p class="mb-1"><strong>Source:</strong></p>
+                                        <p id="sourceUrl" class="text-muted"></p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-2">
+                                        <span class="badge bg-info text-dark" id="categoryBadge">Category: —</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Overview -->
+        <div class="row mb-4">
+            <div class="col-lg-12">
+                <h4 class="mb-3">
+                    <i class="bi bi-graph-up"></i> Statistics Overview
+                </h4>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h6>Original Words</h6>
+                        <p id="origWords" class="stat-value">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="bi bi-collection-fill"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h6>Original Sentences</h6>
+                        <p id="origSents" class="stat-value">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="bi bi-percent"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h6>Avg Word Length</h6>
+                        <p id="avgWordLen" class="stat-value">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h6>Reading Time</h6>
+                        <p id="readingTime" class="stat-value">0 min</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Keyword & NER Summary -->
+        <div class="row mb-4">
+            <div class="col-lg-6 mb-3">
+                <div class="card shadow-lg h-100">
+                    <div class="card-header bg-secondary text-white">
+                        <h6 class="mb-0"><i class="bi bi-tags"></i> Keywords</h6>
+                    </div>
+                    <div class="card-body" id="keywordList">
+                        <p class="text-muted">Loading keywords...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-3">
+                <div class="card shadow-lg h-100">
+                    <div class="card-header bg-secondary text-white">
+                        <h6 class="mb-0"><i class="bi bi-diagram-3-fill"></i> Named Entities</h6>
+                    </div>
+                    <div class="card-body" id="entitySummary">
+                        <p class="text-muted">Loading named entity information...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation for Results -->
+        <ul class="nav nav-tabs mb-4" id="resultTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="original-tab" data-bs-toggle="tab" 
+                    data-bs-target="#original-content" type="button" role="tab" aria-controls="original-content" 
+                    aria-selected="true">
+                    <i class="bi bi-file-earmark-text"></i> Original Article
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="extractive-tab" data-bs-toggle="tab" 
+                    data-bs-target="#extractive-content" type="button" role="tab" aria-controls="extractive-content" 
+                    aria-selected="false">
+                    <i class="bi bi-bar-chart"></i> Extractive Summary
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="abstractive-tab" data-bs-toggle="tab" 
+                    data-bs-target="#abstractive-content" type="button" role="tab" aria-controls="abstractive-content" 
+                    aria-selected="false">
+                    <i class="bi bi-magic"></i> Abstractive Summary
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="comparison-tab" data-bs-toggle="tab" 
+                    data-bs-target="#comparison-content" type="button" role="tab" aria-controls="comparison-content" 
+                    aria-selected="false">
+                    <i class="bi bi-diagram-3"></i> Comparison & ROUGE
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="resultTabContent">
+            <!-- Original Article Tab -->
+            <div class="tab-pane fade show active" id="original-content" role="tabpanel" aria-labelledby="original-tab">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-file-earmark-text"></i> Original Article
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="originalText" class="article-content"></div>
+                        <hr>
+                        <small class="text-muted">
+                            Words: <span id="origWordsDisplay">0</span> | 
+                            Sentences: <span id="origSentsDisplay">0</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Extractive Summary Tab -->
+            <div class="tab-pane fade" id="extractive-content" role="tabpanel" aria-labelledby="extractive-tab">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-bar-chart"></i> Extractive Summary (NLTK-based)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="extractiveError" class="alert alert-warning d-none"></div>
+                        <div id="extractiveText" class="article-content"></div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted">
+                                    Words: <span id="extractWordsDisplay">0</span>
+                                </small>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted">
+                                    Compression: <span id="extractCompressionDisplay">0%</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Abstractive Summary Tab -->
+            <div class="tab-pane fade" id="abstractive-content" role="tabpanel" aria-labelledby="abstractive-tab">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-magic"></i> Abstractive Summary (Hugging Face BART)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="abstractiveError" class="alert alert-warning d-none"></div>
+                        <div id="abstractiveText" class="article-content"></div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted">
+                                    Words: <span id="abstractWordsDisplay">0</span>
+                                </small>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted">
+                                    Compression: <span id="abstractCompressionDisplay">0%</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison & ROUGE Tab -->
+            <div class="tab-pane fade" id="comparison-content" role="tabpanel" aria-labelledby="comparison-tab">
+                <div class="card shadow-lg mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="bi bi-diagram-3"></i> Summary Comparison
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Metric</th>
+                                        <th class="text-center">Original</th>
+                                        <th class="text-center">Extractive</th>
+                                        <th class="text-center">Abstractive</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Word Count</strong></td>
+                                        <td id="comp-orig-words" class="text-center">0</td>
+                                        <td id="comp-extract-words" class="text-center">0</td>
+                                        <td id="comp-abstract-words" class="text-center">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Sentence Count</strong></td>
+                                        <td id="comp-orig-sents" class="text-center">0</td>
+                                        <td id="comp-extract-sents" class="text-center">0</td>
+                                        <td id="comp-abstract-sents" class="text-center">0</td>
+                                    </tr>
+                                    <tr class="table-success">
+                                        <td><strong>Compression Ratio (%)</strong></td>
+                                        <td class="text-center">—</td>
+                                        <td id="comp-extract-ratio" class="text-center">0%</td>
+                                        <td id="comp-abstract-ratio" class="text-center">0%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ROUGE Scores -->
+                <div class="card shadow-lg">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-graph-up"></i> ROUGE Scores Analysis
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">
+                            ROUGE (Recall-Oriented Understudy for Gisting Evaluation) measures summary quality:
+                        </p>
+
+                        <div class="row">
+                            <!-- ROUGE-1 -->
+                            <div class="col-md-4 mb-3">
+                                <div class="rouge-card">
+                                    <h6>ROUGE-1 (Unigrams)</h6>
+                                    <div class="rouge-metric">
+                                        <p class="mb-1"><strong>Precision:</strong></p>
+                                        <p id="rouge1-precision" class="metric-value">—</p>
+                                    </div>
+                                    <div class="rouge-metric">
+                                        <p class="mb-1"><strong>Recall:</strong></p>
+                                        <p id="rouge1-recall" class="metric-value">—</p>
+                                    </div>
+                                    <div class="rouge-metric">
+                                        <p class="mb-1"><strong>F-Score:</strong></p>
+                                        <p id="rouge1-fscore" class="metric-value">—</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ROUGE-2 -->
+                            <div class="col-md-4 mb-3">
+                                <div class="rouge-card">
+                                    <h6>ROUGE-2 (Bigrams)</h6>
+                                    <div class="rouge-metric">
+                                        <p class="mb-1"><strong>Precision:</strong></p>
+                                        <p id="rouge2-precision" class="metric-value">—</p>
+                                    </div>
+                                    <div class="rouge-metric">
+                                        <p class="mb-1"><strong>Recall:</strong></p>
+                                        <p id="rouge2-recall" class="metric-value">—</p>
+                                    </div>
+                                    <div class="rouge-metric">
+                                        <p class="mb-1"><strong>F-Score:</strong></p>
+                                        <p id="rouge2-fscore" class="metric-value">—</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ROUGE-L -->
+                            <div class="col-md-4 mb-3">
+                                <div class="rouge-card">
+                                    <h6>ROUGE-L (LCS)</h6>
+                                    <div class="rouge-metric">
+                                        <p class="mb-1"><strong>Precision:</strong></p>
+                                        <p id="rougeL-precision" class="metric-value">—</p>
+                                    </div>
+                                    <div class="rouge-metric">
+                                        <p class="mb-1"><strong>Recall:</strong></p>
+                                        <p id="rougeL-recall" class="metric-value">—</p>
+                                    </div>
+                                    <div class="rouge-metric">
+                                        <p class="mb-1"><strong>F-Score:</strong></p>
+                                        <p id="rougeL-fscore" class="metric-value">—</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+                        <small class="text-muted">
+                            <strong>Note:</strong> ROUGE scores measure the overlap between the summary and original text.
+                            Higher scores indicate better quality summaries.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mt-5">
+            <div class="col-lg-12">
+                <div class="d-grid gap-2 d-sm-flex justify-content-center">
+                    <button class="btn btn-primary btn-lg" id="newSummaryBtn">
+                        <i class="bi bi-arrow-counterclockwise"></i> New Summary
+                    </button>
+                    <button class="btn btn-outline-secondary btn-lg" id="copyExtractiveBtn">
+                        <i class="bi bi-files"></i> Copy Extractive
+                    </button>
+                    <button class="btn btn-outline-secondary btn-lg" id="copyAbstractiveBtn">
+                        <i class="bi bi-files"></i> Copy Abstractive
+                    </button>
+                    <button class="btn btn-outline-success btn-lg" id="downloadPdfBtn">
+                        <i class="bi bi-file-earmark-pdf"></i> Download PDF Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-4 mt-5">
+        <div class="container">
+            <p class="mb-2">
+                <strong>NLP News Article Summarizer</strong> - Powered by Flask, NLTK & Hugging Face Transformers
+            </p>
+            <small class="text-muted">
+                © 2024 | Built with <i class="bi bi-heart-fill text-danger"></i> for Academic Excellence
+            </small>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Result Display Script -->
+    <script>
+        // Retrieve results from session storage
+        const results = JSON.parse(sessionStorage.getItem('summarizerResults'));
+
+        if (!results) {
+            window.location.href = '/';
+        }
+
+        // Populate article information
+        document.getElementById('articleTitle').textContent = results.article.title;
+        document.getElementById('articleAuthor').textContent = results.article.author || 'Unknown';
+        document.getElementById('publishDate').textContent = results.article.publish_date || 'Unknown';
+        document.getElementById('sourceUrl').innerHTML = results.article.source_url
+            ? `<a href="${results.article.source_url}" target="_blank">${results.article.source_url}</a>`
+            : 'N/A';
+
+        const imageContainer = document.getElementById('articleImageContainer');
+        const imageElement = document.getElementById('articleImage');
+        if (results.article.top_image) {
+            imageElement.src = results.article.top_image;
+            imageElement.alt = `Top image for ${results.article.title}`;
+        } else {
+            imageContainer.style.display = 'none';
+        }
+
+        // Populate statistics
+        const stats = results.comparison_stats;
+        document.getElementById('origWords').textContent = stats.original.word_count;
+        document.getElementById('origSents').textContent = stats.original.sentence_count;
+        document.getElementById('avgWordLen').textContent = stats.original.avg_word_length;
+        document.getElementById('readingTime').textContent = `${results.statistics.reading_time_minutes} min`;
+
+        document.getElementById('categoryBadge').textContent = `Category: ${results.category.category} (${results.category.score}%)`;
+        const keywordContainer = document.getElementById('keywordList');
+        const keywordItems = results.keywords && Array.isArray(results.keywords) ? results.keywords : [];
+        if (keywordItems.length) {
+            keywordContainer.innerHTML = keywordItems.map(item =>
+                `<span class="badge bg-light text-dark keyword-chip">${item.keyword} (${item.frequency})</span>`
+            ).join(' ');
+        } else {
+            keywordContainer.innerHTML = '<p class="text-muted">No keywords available.</p>';
+        }
+
+        const entityContainer = document.getElementById('entitySummary');
+        const entities = results.ner.entities || {};
+        const entityHtml = Object.entries(entities).map(([category, items]) => {
+            if (!items || !items.length) return '';
+            return `
+                <div class="mb-2">
+                    <h6 class="mb-1 text-muted">${category}</h6>
+                    <p>${items.slice(0, 8).join(', ')}</p>
+                </div>
+            `;
+        }).filter(Boolean).join('');
+
+        entityContainer.innerHTML = entityHtml || '<p class="text-muted">No named entities detected.</p>';
+
+        // Populate original article
+        document.getElementById('originalText').textContent = results.article.content;
+        document.getElementById('origWordsDisplay').textContent = stats.original.word_count;
+        document.getElementById('origSentsDisplay').textContent = stats.original.sentence_count;
+
+        // Populate extractive summary
+        if (results.extractive.error) {
+            document.getElementById('extractiveError').classList.remove('d-none');
+            document.getElementById('extractiveError').innerHTML = `<i class="bi bi-info-circle"></i> ${results.extractive.error}`;
+            document.getElementById('extractiveText').textContent = 'N/A - Model Error';
+        } else {
+            document.getElementById('extractiveText').textContent = results.extractive.summary;
+            document.getElementById('extractWordsDisplay').textContent = results.extractive.metrics.summary_word_count;
+            document.getElementById('extractCompressionDisplay').textContent = results.extractive.metrics.reduction_percentage + '%';
+        }
+
+        // Populate abstractive summary
+        if (results.abstractive.error) {
+            document.getElementById('abstractiveError').classList.remove('d-none');
+            document.getElementById('abstractiveError').innerHTML = `<i class="bi bi-info-circle"></i> ${results.abstractive.error}`;
+            document.getElementById('abstractiveText').textContent = 'N/A - Model Error';
+        } else {
+            document.getElementById('abstractiveText').textContent = results.abstractive.summary;
+            document.getElementById('abstractWordsDisplay').textContent = results.abstractive.metrics.summary_word_count;
+            document.getElementById('abstractCompressionDisplay').textContent = results.abstractive.metrics.reduction_percentage + '%';
+        }
+
+        // Populate comparison table
+        document.getElementById('comp-orig-words').textContent = stats.original.word_count;
+        document.getElementById('comp-orig-sents').textContent = stats.original.sentence_count;
+        document.getElementById('comp-extract-words').textContent = stats.extractive.word_count;
+        document.getElementById('comp-extract-sents').textContent = stats.extractive.sentence_count;
+        document.getElementById('comp-extract-ratio').textContent = stats.extractive.compression + '%';
+        document.getElementById('comp-abstract-words').textContent = stats.abstractive.word_count;
+        document.getElementById('comp-abstract-sents').textContent = stats.abstractive.sentence_count;
+        document.getElementById('comp-abstract-ratio').textContent = stats.abstractive.compression + '%';
+
+        // Populate ROUGE scores
+        if (results.rouge_scores.error) {
+            console.warn('ROUGE calculation error:', results.rouge_scores.error);
+        } else {
+            const rouge = results.rouge_scores;
+            
+            if (rouge['ROUGE-1']) {
+                document.getElementById('rouge1-precision').textContent = rouge['ROUGE-1'].precision;
+                document.getElementById('rouge1-recall').textContent = rouge['ROUGE-1'].recall;
+                document.getElementById('rouge1-fscore').textContent = rouge['ROUGE-1'].f_score;
+            }
+            
+            if (rouge['ROUGE-2']) {
+                document.getElementById('rouge2-precision').textContent = rouge['ROUGE-2'].precision;
+                document.getElementById('rouge2-recall').textContent = rouge['ROUGE-2'].recall;
+                document.getElementById('rouge2-fscore').textContent = rouge['ROUGE-2'].f_score;
+            }
+            
+            if (rouge['ROUGE-L']) {
+                document.getElementById('rougeL-precision').textContent = rouge['ROUGE-L'].precision;
+                document.getElementById('rougeL-recall').textContent = rouge['ROUGE-L'].recall;
+                document.getElementById('rougeL-fscore').textContent = rouge['ROUGE-L'].f_score;
+            }
+        }
+
+        // Event listeners for buttons
+        document.getElementById('newSummaryBtn').addEventListener('click', () => {
+            window.location.href = '/';
+        });
+
+        document.getElementById('copyExtractiveBtn').addEventListener('click', () => {
+            const text = results.extractive.summary || 'N/A';
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Extractive summary copied to clipboard!');
+            }).catch(err => console.error('Failed to copy:', err));
+        });
+
+        document.getElementById('copyAbstractiveBtn').addEventListener('click', () => {
+            const text = results.abstractive.summary || 'N/A';
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Abstractive summary copied to clipboard!');
+            }).catch(err => console.error('Failed to copy:', err));
+        });
+
+        document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/download-report', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(results)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'PDF download failed');
+                }
+
+                const pdfBlob = await response.blob();
+                const url = window.URL.createObjectURL(pdfBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'news_summary_report.pdf';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (err) {
+                alert('Unable to download PDF report.');
+                console.error('PDF download error:', err);
+            }
+        });
+    </script>
+</body>
+</html>

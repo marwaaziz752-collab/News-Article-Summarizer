@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NLP News Article Summarizer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-dark bg-dark sticky-top">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-newspaper"></i> News Article Summarizer
+            </span>
+            <small class="text-muted">Powered by NLP & Deep Learning</small>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container my-5">
+        <!-- Header Section -->
+        <div class="row mb-5">
+            <div class="col-lg-12">
+                <h1 class="display-4 text-center mb-3">
+                    <i class="bi bi-lightning-charge-fill text-warning"></i> Article Summarizer
+                </h1>
+                <p class="lead text-center text-muted">
+                    Extract key insights from news articles using Advanced NLP techniques
+                </p>
+                <hr class="my-4">
+            </div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="row mb-5">
+            <div class="col-lg-8 offset-lg-2">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-pencil-square"></i> Enter Your Article</h5>
+                    </div>
+
+                    <div class="card-body">
+                        <!-- Tab Navigation -->
+                        <ul class="nav nav-tabs mb-4" id="inputTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="url-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#url-content" type="button" role="tab" aria-controls="url-content" 
+                                    aria-selected="true">
+                                    <i class="bi bi-link-45deg"></i> Article URL
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="text-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#text-content" type="button" role="tab" aria-controls="text-content" 
+                                    aria-selected="false">
+                                    <i class="bi bi-file-text"></i> Paste Text
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- Tab Content -->
+                        <div class="tab-content" id="inputTabContent">
+                            <!-- URL Tab -->
+                            <div class="tab-pane fade show active" id="url-content" role="tabpanel" aria-labelledby="url-tab">
+                                <form id="urlForm">
+                                    <div class="mb-3">
+                                        <label for="urlInput" class="form-label">
+                                            <i class="bi bi-link-45deg"></i> Article URL
+                                        </label>
+                                        <input type="url" class="form-control form-control-lg" id="urlInput" 
+                                            placeholder="https://example.com/article" required>
+                                        <small class="form-text text-muted">
+                                            Enter the URL of a news article
+                                        </small>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Text Tab -->
+                            <div class="tab-pane fade" id="text-content" role="tabpanel" aria-labelledby="text-tab">
+                                <form id="textForm">
+                                    <div class="mb-3">
+                                        <label for="articleTitle" class="form-label">
+                                            <i class="bi bi-type"></i> Article Title (Optional)
+                                        </label>
+                                        <input type="text" class="form-control" id="articleTitle" 
+                                            placeholder="Enter article title">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="textInput" class="form-label">
+                                            <i class="bi bi-file-text"></i> Article Text
+                                        </label>
+                                        <textarea class="form-control" id="textInput" rows="8" 
+                                            placeholder="Paste your article text here..." required></textarea>
+                                        <small class="form-text text-muted">
+                                            Minimum 20 words required
+                                        </small>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Summary Length Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Summary Length</label>
+                            <div class="btn-group" role="group" aria-label="Summary length selection">
+                                <input type="radio" class="btn-check" name="lengthOptions" id="lengthShort" autocomplete="off" value="short">
+                                <label class="btn btn-outline-secondary" for="lengthShort">Short</label>
+
+                                <input type="radio" class="btn-check" name="lengthOptions" id="lengthMedium" autocomplete="off" value="medium" checked>
+                                <label class="btn btn-outline-secondary" for="lengthMedium">Medium</label>
+
+                                <input type="radio" class="btn-check" name="lengthOptions" id="lengthDetailed" autocomplete="off" value="detailed">
+                                <label class="btn btn-outline-secondary" for="lengthDetailed">Detailed</label>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2 mt-4">
+                            <button class="btn btn-primary btn-lg" id="summarizeBtn" type="button">
+                                <i class="bi bi-play-fill"></i> Summarize Article
+                            </button>
+                        </div>
+
+                        <!-- Loading Spinner -->
+                        <div id="loadingSpinner" class="d-none mt-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Processing...</span>
+                            </div>
+                            <span class="ms-2">Processing your article...</span>
+                        </div>
+
+                        <!-- Error Alert -->
+                        <div id="errorAlert" class="alert alert-danger d-none mt-3" role="alert">
+                            <i class="bi bi-exclamation-triangle"></i> 
+                            <span id="errorMessage"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="row mb-5">
+            <div class="col-lg-8 offset-lg-2">
+                <h3 class="mb-4 text-center">
+                    <i class="bi bi-stars"></i> Features
+                </h3>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-bar-chart text-primary"></i> Extractive Summarization
+                                </h5>
+                                <p class="card-text">
+                                    Identifies and extracts the most important sentences from the original text
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-magic text-success"></i> Abstractive Summarization
+                                </h5>
+                                <p class="card-text">
+                                    Generates new sentences that capture the essence of the original article
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-graph-up text-info"></i> ROUGE Scoring
+                                </h5>
+                                <p class="card-text">
+                                    Compares summaries with original text using ROUGE metrics
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-file-earmark-text text-warning"></i> Statistics
+                                </h5>
+                                <p class="card-text">
+                                    Detailed word count, sentence count, and compression analysis
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-4 mt-5">
+        <div class="container">
+            <p class="mb-2">
+                <strong>NLP News Article Summarizer</strong> - Powered by Flask, NLTK & Hugging Face Transformers
+            </p>
+            <small class="text-muted">
+                © 2024 | Built with <i class="bi bi-heart-fill text-danger"></i> for Academic Excellence
+            </small>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Main Script -->
+    <script>
+        const summarizeBtn = document.getElementById('summarizeBtn');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const errorAlert = document.getElementById('errorAlert');
+        const errorMessage = document.getElementById('errorMessage');
+        const urlInput = document.getElementById('urlInput');
+        const textInput = document.getElementById('textInput');
+        const articleTitle = document.getElementById('articleTitle');
+        const urlTab = document.getElementById('url-tab');
+        const textTab = document.getElementById('text-tab');
+
+        // Add event listener to summarize button
+        summarizeBtn.addEventListener('click', async () => {
+            try {
+                // Reset error alert
+                errorAlert.classList.add('d-none');
+                errorMessage.textContent = '';
+
+                // Show loading spinner
+                loadingSpinner.classList.remove('d-none');
+                summarizeBtn.disabled = true;
+
+                // Determine input type
+                const activeTab = document.querySelector('.tab-pane.active');
+                const isUrlTab = activeTab.id === 'url-content';
+
+                // Validate input
+                if (isUrlTab && !urlInput.value.trim()) {
+                    throw new Error('Please enter a valid URL');
+                }
+                if (!isUrlTab && !textInput.value.trim()) {
+                    throw new Error('Please enter article text');
+                }
+
+                // Prepare request payload
+                const payload = isUrlTab
+                    ? {
+                        type: 'url',
+                        url: urlInput.value.trim()
+                    }
+                    : {
+                        type: 'text',
+                        text: textInput.value.trim(),
+                        title: articleTitle.value.trim() || 'Manual Input'
+                    };
+
+                const selectedLength = document.querySelector('input[name="lengthOptions"]:checked').value;
+                if (!isUrlTab) {
+                    payload.length = selectedLength;
+                } else {
+                    payload.length = selectedLength;
+                }
+
+                // Send request to summarization API
+                const response = await fetch('/api/summarize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Summarization failed');
+                }
+
+                // Store results in session storage for result page
+                sessionStorage.setItem('summarizerResults', JSON.stringify(data));
+
+                // Redirect to result page
+                window.location.href = '/result';
+
+            } catch (error) {
+                errorMessage.textContent = error.message;
+                errorAlert.classList.remove('d-none');
+                console.error('Error:', error);
+            } finally {
+                loadingSpinner.classList.add('d-none');
+                summarizeBtn.disabled = false;
+            }
+        });
+
+        // Handle Enter key in inputs
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !summarizeBtn.disabled) {
+                summarizeBtn.click();
+            }
+        });
+
+        textInput.addEventListener('keypress', (e) => {
+            if (e.ctrlKey && e.key === 'Enter' && !summarizeBtn.disabled) {
+                summarizeBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
